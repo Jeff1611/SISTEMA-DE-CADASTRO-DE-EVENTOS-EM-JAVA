@@ -1,157 +1,247 @@
-CLASSE USUARIOS:
+Usuarios:
 
-public class Usuario {
-private String nome;
-private String email;
-private String cidade;
+public class User {
+    private String name;
+    private String email;
+    private String city;
 
-public Usuario(String nome, String email, String cidade) {
-    this.nome = nome;
-    this.email = email;
-    this.cidade = cidade;
+    public User(String name, String email, String city) {
+        this.name = name;
+        this.email = email;
+        this.city = city;
+    }
+
+    // Getters and Setters
+    public String getName() { return name; }
+    public String getEmail() { return email; }
+    public String getCity() { return city; }
+
+    @Override
+    public String toString() {
+        return name + " (" + email + ", " + city + ")";
+    }
 }
 
-public String getNome() {
-    return nome;
-}
-
-public String getEmail() {
-    return email;
-}
-
-public String getCidade() {
-    return cidade;
-}
-
-@Override
-public String toString() {
-    return "Nome: " + nome + ", Email: " + email + ", Cidade: " + cidade;
-}
-}
-
-=============================================================================================
-
-CLASSE EVENTOS:
+===================================================================================================================
+Evento:
 
 import java.time.LocalDateTime;
 
-public class Evento {
-private String nome;
-private String endereco;
-private String categoria;
-private LocalDateTime horario;
-private String descricao;
-private boolean participando;
+public class Event {
+    private String name;
+    private String address;
+    private String category;
+    private LocalDateTime dateTime;
+    private String description;
 
-public Evento(String nome, String endereco, String categoria, LocalDateTime horario, String descricao) {
-    this.nome = nome;
-    this.endereco = endereco;
-    this.categoria = categoria;
-    this.horario = horario;
-    this.descricao = descricao;
-    this.participando = false;
-}
+    public Event(String name, String address, String category, LocalDateTime dateTime, String description) {
+        this.name = name;
+        this.address = address;
+        this.category = category;
+        this.dateTime = dateTime;
+        this.description = description;
+    }
 
-public String getNome() {
-    return nome;
-}
+    // Getters and Setters
+    public String getName() { return name; }
+    public String getAddress() { return address; }
+    public String getCategory() { return category; }
+    public LocalDateTime getDateTime() { return dateTime; }
+    public String getDescription() { return description; }
 
-public LocalDateTime getHorario() {
-    return horario;
-}
-
-public String getCategoria() {
-    return categoria;
-}
-
-public String getEndereco() {
-    return endereco;
-}
-
-public String getDescricao() {
-    return descricao;
-}
-
-public boolean isParticipando() {
-    return participando;
-}
-
-public void confirmarParticipacao() {
-    this.participando = true;
-}
-
-public void cancelarParticipacao() {
-    this.participando = false;
-}
-
-public boolean isEventoPassado() {
-    return LocalDateTime.now().isAfter(horario);
-}
-
-@Override
-public String toString() {
-    return "Evento: " + nome + " - " + categoria + " - " + endereco + " - " + descricao + " - " + horario;
-}
-}
-
-=============================================================================================
-
-CLASSE DE GERENCIAMENTO DO EVENTO:
-
-import java.io.;
-import java.util.;
-
-public class EventoManager {
-private List eventos;
-
-public EventoManager() {
-    eventos = new ArrayList<>();
-    carregarEventos();
-}
-
-public void carregarEventos() {
-    try (BufferedReader br = new BufferedReader(new FileReader("events.data"))) {
-        String linha;
-        while ((linha = br.readLine()) != null) {
-            String[] dados = linha.split(",");
-            String nome = dados[0];
-            String endereco = dados[1];
-            String categoria = dados[2];
-            LocalDateTime horario = LocalDateTime.parse(dados[3]);
-            String descricao = dados[4];
-            Evento evento = new Evento(nome, endereco, categoria, horario, descricao);
-            eventos.add(evento);
-        }
-    } catch (IOException e) {
-        System.out.println("Erro ao carregar eventos: " + e.getMessage());
+    @Override
+    public String toString() {
+        return name + " - " + category + " at " + address + " on " + dateTime.toString() + "\n" + description;
     }
 }
 
-public void salvarEventos() {
-    try (BufferedWriter bw = new BufferedWriter(new FileWriter("events.data"))) {
-        for (Evento evento : eventos) {
-            bw.write(evento.getNome() + "," + evento.getEndereco() + "," + evento.getCategoria() + "," +
-                     evento.getHorario() + "," + evento.getDescricao());
-            bw.newLine();
+===================================================================================================================
+
+Gerenciador do evento:
+
+import java.util.*;
+import java.time.LocalDateTime;
+
+public class EventManager {
+    private List<Event> events;
+    private Set<Event> userConfirmedEvents;
+
+    public EventManager() {
+        this.events = new ArrayList<>();
+        this.userConfirmedEvents = new HashSet<>();
+    }
+
+    public void addEvent(Event event) {
+        events.add(event);
+    }
+
+    public void listEvents() {
+        events.stream()
+            .sorted(Comparator.comparing(Event::getDateTime))
+            .forEach(System.out::println);
+    }
+
+    public void confirmParticipation(Event event) {
+        userConfirmedEvents.add(event);
+    }
+
+    public void cancelParticipation(Event event) {
+        userConfirmedEvents.remove(event);
+    }
+
+    public void listConfirmedEvents() {
+        if (userConfirmedEvents.isEmpty()) {
+            System.out.println("No events confirmed.");
+        } else {
+            userConfirmedEvents.forEach(System.out::println);
         }
-    } catch (IOException e) {
-        System.out.println("Erro ao salvar eventos: " + e.getMessage());
+    }
+
+    public List<Event> getEvents() {
+        return events;
+    }
+
+    public void loadEventsFromFile(List<Event> fileEvents) {
+        this.events.addAll(fileEvents);
     }
 }
 
-public void cadastrarEvento(Evento evento) {
-    eventos.add(evento);
-    salvarEventos();
-}
+===================================================================================================================
 
-public List<Evento> listarEventos() {
-    return eventos;
-}
+Gerenciador de arquivos:
 
-public List<Evento> eventosFuturos() {
-    List<Evento> futuros = new ArrayList<>();
-    for (Evento evento : eventos) {
-        if (!evento.isEventoPassado()) {
-            futuros.add(evento);
+import java.io.*;
+import java.time.LocalDateTime;
+import java.util.*;
+
+public class FileManager {
+    private static final String FILE_PATH = "./resources/events.data";
+
+    public static void saveEvents(List<Event> events) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_PATH))) {
+            for (Event event : events) {
+                writer.write(event.getName() + "," + event.getAddress() + ","
+                        + event.getCategory() + "," + event.getDateTime() + ","
+                        + event.getDescription());
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            System.out.println("Error writing events to file.");
         }
     }
+
+    public static List<Event> loadEvents() {
+        List<Event> events = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(FILE_PATH))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] data = line.split(",");
+                String name = data[0];
+                String address = data[1];
+                String category = data[2];
+                LocalDateTime dateTime = LocalDateTime.parse(data[3]);
+                String description = data[4];
+                events.add(new Event(name, address, category, dateTime, description));
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading events from file.");
+        }
+        return events;
+    }
+}
+
+===================================================================================================================
+
+Principal:
+
+import java.time.LocalDateTime;
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        EventManager eventManager = new EventManager();
+        User user = new User("John Doe", "john@example.com", "New York");
+
+        // Load events from file
+        List<Event> eventsFromFile = FileManager.loadEvents();
+        eventManager.loadEventsFromFile(eventsFromFile);
+
+        // Menu Loop
+        while (true) {
+            System.out.println("1. List events");
+            System.out.println("2. Confirm participation");
+            System.out.println("3. Cancel participation");
+            System.out.println("4. View confirmed events");
+            System.out.println("5. Add new event");
+            System.out.println("6. Exit");
+
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // Consume the newline character
+
+            switch (choice) {
+                case 1:
+                    eventManager.listEvents();
+                    break;
+
+                case 2:
+                    System.out.print("Enter event name to confirm participation: ");
+                    String confirmName = scanner.nextLine();
+                    Event eventToConfirm = eventManager.getEvents().stream()
+                            .filter(e -> e.getName().equals(confirmName))
+                            .findFirst()
+                            .orElse(null);
+                    if (eventToConfirm != null) {
+                        eventManager.confirmParticipation(eventToConfirm);
+                        System.out.println("Confirmed participation in " + confirmName);
+                    }
+                    break;
+
+                case 3:
+                    System.out.print("Enter event name to cancel participation: ");
+                    String cancelName = scanner.nextLine();
+                    Event eventToCancel = eventManager.getEvents().stream()
+                            .filter(e -> e.getName().equals(cancelName))
+                            .findFirst()
+                            .orElse(null);
+                    if (eventToCancel != null) {
+                        eventManager.cancelParticipation(eventToCancel);
+                        System.out.println("Cancelled participation in " + cancelName);
+                    }
+                    break;
+
+                case 4:
+                    eventManager.listConfirmedEvents();
+                    break;
+
+                case 5:
+                    System.out.print("Enter event name: ");
+                    String name = scanner.nextLine();
+                    System.out.print("Enter event address: ");
+                    String address = scanner.nextLine();
+                    System.out.print("Enter event category (e.g., festa, show, etc.): ");
+                    String category = scanner.nextLine();
+                    System.out.print("Enter event description: ");
+                    String description = scanner.nextLine();
+                    System.out.print("Enter event date and time (yyyy-mm-ddTHH:mm): ");
+                    String dateTimeInput = scanner.nextLine();
+                    LocalDateTime dateTime = LocalDateTime.parse(dateTimeInput);
+                    Event newEvent = new Event(name, address, category, dateTime, description);
+                    eventManager.addEvent(newEvent);
+                    System.out.println("Event added successfully!");
+                    break;
+
+                case 6:
+                    // Save events before exit
+                    FileManager.saveEvents(eventManager.getEvents());
+                    System.out.println("Exiting...");
+                    return;
+
+                default:
+                    System.out.println("Invalid option!");
+            }
+        }
+    }
+}
+
+===================================================================================================================
